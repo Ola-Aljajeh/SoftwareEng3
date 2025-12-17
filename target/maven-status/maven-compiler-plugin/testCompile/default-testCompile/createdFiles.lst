@@ -1,0 +1,5 @@
+com\bankingsystem\InterestStrategyTests.class
+com\bankingsystem\FacadeIntegrationTests.class
+com\bankingsystem\ApprovalChainTests.class
+com\bankingsystem\NotificationObserverTests.class
+com\bankingsystem\AccountTests.class

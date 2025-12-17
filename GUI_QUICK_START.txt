@@ -1,0 +1,84 @@
+# GUI Quick Start
+
+## Launch in 1 Second ⚡
+
+**Windows:**  Double-click `run-gui.bat`
+
+**Mac/Linux:**  `java -cp target/classes com.bankingsystem.BankingSystemGUI`
+
+---
+
+## What You See 📺
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Advanced Banking System - Interactive Pattern Showcase  │
+│ Total Balance: $15,103.58                               │
+├──────────────┬───────────────────┬─────────────────────┤
+│   ACCOUNTS   │   OPERATIONS      │   NOTIFICATIONS     │
+│   (Left)     │   (Center)        │   (Right)           │
+│              │                   │                     │
+│ • Johnson    │ [Deposit $100]    │ [EMAIL] Deposited  │
+│   Family     │ [Withdraw $50]    │ [SMS] Approved     │
+│   ├─Savings  │ [Interest]        │ [IN-APP] Interest  │
+│   ├─Checking │ [Transfer]        │                    │
+│   └─Children │ Interest: 5%      │                    │
+│     ├─Acct1  │ [Simple/Compound] │ Clear              │
+│     └─Acct2  │                   │                    │
+└──────────────┴───────────────────┴─────────────────────┘
+[🎯Composite] [📢Observer] [🔗Chain] [⚙️Strategy] [🎭Facade] [🔄State]
+```
+
+---
+
+## Click-by-Click Demo 🎮
+
+### Try This in Order:
+
+1. **Select Account** → Click "Savings Account" in the tree
+2. **Deposit Money** → Click "Deposit $100" → see notification
+3. **Apply Interest** → Click "Apply Interest" → balance increases
+4. **Switch Strategy** → Choose "Compound" in dropdown
+5. **Apply Again** → See different interest amount!
+6. **Transfer** → Set source, select destination, transfer $200
+7. **Watch** → See approval routing in notifications
+
+---
+
+## What Each Pattern Does 📚
+
+**Click buttons at bottom to see explanations:**
+
+- 🎯 **Composite** - Account groups work uniformly
+- 📢 **Observer** - Multiple notifications (Email, SMS, In-App)
+- 🔗 **Chain** - Transaction approval routing ($1k → $10k → unlimited)
+- ⚙️ **Strategy** - Switch interest calculations at runtime
+- 🎭 **Facade** - Unified banking interface (hides complexity)
+- 🔄 **State** - Accounts have states (Active, Frozen, etc.)
+
+---
+
+## Pro Tips 💡
+
+✅ **Watch the Notifications Panel** - It shows everything happening
+✅ **Try Big Transfers** - See how approval chain works ($15k+ fails)
+✅ **Switch Strategies** - Apply interest with Simple, then Compound
+✅ **Use Account Groups** - Show Composite by operating on groups
+✅ **Read Notifications** - They explain each pattern
+
+---
+
+## For Presentation 🎓
+
+**Point out while GUI runs:**
+
+1. "This is the **Composite Pattern** - see the account hierarchy?"
+2. "Any action triggers **Observer Pattern** - notifications appear instantly"
+3. "Transfer $1500? That's **Chain of Responsibility** - approved automatically"
+4. "Switch interest strategy? That's the **Strategy Pattern** working"
+5. "All these subsystems work together through the **Facade Pattern**"
+
+---
+
+That's it! The GUI does the rest. Have fun and **get those A+ grades!** 🎯
+
