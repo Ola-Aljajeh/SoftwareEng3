@@ -528,6 +528,16 @@ public class ModernBankingSystemGUI extends JFrame {
         }
     }
 
+    private static class AccountTreeCellRenderer extends javax.swing.tree.DefaultTreeCellRenderer {
+        @Override
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean exp, boolean leaf, int row, boolean hasFocus) {
+            Component c = super.getTreeCellRendererComponent(tree, value, sel, exp, leaf, row, hasFocus);
+            // Clear default icons to keep a clean modern look
+            setIcon(null);
+            return c;
+        }
+    }
+
     private static class RichNotificationRenderer extends JPanel implements ListCellRenderer<String> {
         private JLabel title = new JLabel();
         private JLabel time = new JLabel();
@@ -542,10 +552,9 @@ public class ModernBankingSystemGUI extends JFrame {
         @Override
         public Component getListCellRendererComponent(JList<? extends String> list, String value, int index, boolean isSelected, boolean cellHasFocus) {
             // Split by ' - ' to heuristically get short title/time
-            String display = value;
             String[] parts = value.split(" - ", 2);
             title.setText(parts.length>1?parts[1]:value);
-            time.setText(parts.length>0?parts[0].replaceAll("\[|\]","") : "");
+            time.setText(parts.length>0?parts[0].replaceAll("\\[|\\]","") : "");
             if (isSelected) setBackground(list.getSelectionBackground()); else setBackground(list.getBackground());
             setOpaque(true);
             return this;
