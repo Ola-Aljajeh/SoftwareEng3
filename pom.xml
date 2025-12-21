@@ -36,6 +36,12 @@
             <version>5.5.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- FlatLaf for modern Swing look-and-feel -->
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>3.0</version>
+        </dependency>
     </dependencies>
 
     <build>
