@@ -25,4 +25,30 @@ REM Usage: run-tests.bat [<TestClass> | <TestClass>#<testMethod>]
 
 
 
-exit /b %RC%)  echo No surefire reports directory was found.) else (  dir target\surefire-reports /b  echo Listing files in target\surefire-reports:if exist target\surefire-reports (echo Test reports are available at: %CD%\target\surefire-reportsecho.)  echo Tests finished with errors (exit code %RC%).) else (  echo Tests completed successfully.if %RC% EQU 0 (echo.set RC=%ERRORLEVEL%)  mvn -Dtest=%~1 -DskipTests=false test  echo Running specified test: %~1) else (  mvn -DskipTests=false testif "%~1"=="" (echo Running Maven tests...nSETLOCAL
+SETLOCAL
+
+echo Running Maven tests...
+IF "%~1"=="" (
+  mvn -DskipTests=false test
+) ELSE (
+  echo Running specified test: %~1
+  mvn -Dtest=%~1 -DskipTests=false test
+)
+
+SET RC=%ERRORLEVEL%
+echo.
+IF %RC% EQU 0 (
+  echo Tests completed successfully.
+) ELSE (
+  echo Tests finished with errors (exit code %RC%).
+)
+echo.
+echo Test reports are available at: %CD%\target\surefire-reports
+IF exist target\surefire-reports (
+  echo Listing files in target\surefire-reports:
+  dir target\surefire-reports /b
+) ELSE (
+  echo No surefire reports directory was found.
+)
+ENDLOCAL
+exit /b %RC%
