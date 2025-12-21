@@ -8,6 +8,14 @@ This project demonstrates **six classical design patterns** in a practical banki
 
 ---
 
+### Prerequisites ✅
+
+- **Java 21 (LTS)** JDK installed and `JAVA_HOME` configured
+- **Maven 3.8+** for building and running tests
+- Recommended: set your IDE's project JDK to **Java 21**
+
+---
+
 ## Design Patterns Implemented
 
 ### 1. **Composite Pattern** — Account Module

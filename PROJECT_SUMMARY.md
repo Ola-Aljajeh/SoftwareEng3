@@ -109,7 +109,7 @@ BankingSystem/
 - Maven project setup (pom.xml)
 - JUnit 5 + Mockito for testing
 - SLF4J + Logback for logging
-- Java 17 compatibility
+- **Java 21 LTS compatibility (project upgraded)**
 
 ### 5. **Demonstration Code**
 
