@@ -1,0 +1,33 @@
+@startuml
+title Transfer Flow — BankFacade -> Approval Chain -> Accounts -> Notifications
+participant Client
+participant BankFacade
+participant ApprovalHandler as Chain
+participant AutoApprovalHandler as Auto
+participant ManagerApprovalHandler as Manager
+participant AdminApprovalHandler as Admin
+participant FromAccount
+participant ToAccount
+participant Notifier
+
+Client -> BankFacade: transfer(fromId, toId, amount)
+BankFacade -> Chain: create Transaction and submit(transaction)
+Chain -> Auto: handle(transaction)
+Auto -> Chain: approved? (if auto-approved return APPROVED)
+alt not approved
+  Auto -> Manager: handle(transaction)
+  Manager -> Admin: handle(transaction)
+end
+Chain --> BankFacade: ApprovalStatus (APPROVED / REJECTED)
+alt APPROVED
+  BankFacade -> FromAccount: withdraw(amount)
+  FromAccount --> BankFacade: success
+  BankFacade -> ToAccount: deposit(amount)
+  ToAccount --> BankFacade: success
+  FromAccount -> Notifier: notify("Withdrawal completed")
+  ToAccount -> Notifier: notify("Deposit completed")
+else REJECTED
+  BankFacade -> Client: throw ApprovalRejectedException
+end
+
+@enduml

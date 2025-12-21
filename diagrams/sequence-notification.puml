@@ -1,0 +1,19 @@
+@startuml
+title Notification Flow — Account -> NotificationObservers
+participant Account
+participant NotificationObserver
+participant EmailNotifier
+participant SMSNotifier
+participant InAppNotifier
+
+Account -> NotificationObserver: notifyObservers(message)
+activate NotificationObserver
+NotificationObserver -> EmailNotifier: send(message)
+NotificationObserver -> SMSNotifier: send(message)
+NotificationObserver -> InAppNotifier: send(message)
+EmailNotifier --> NotificationObserver: sent
+SMSNotifier --> NotificationObserver: sent
+InAppNotifier --> NotificationObserver: stored
+deactivate NotificationObserver
+
+@enduml

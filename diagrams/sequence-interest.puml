@@ -1,0 +1,18 @@
+@startuml
+title Apply Interest Flow — Facade -> AccountGroup -> Account -> Strategy -> Notify
+participant BankFacade
+participant AccountGroup
+participant Account
+participant InterestStrategy
+participant Notifier
+
+BankFacade -> AccountGroup: applyInterestAll()
+AccountGroup -> Account: applyInterest()
+Account -> InterestStrategy: computeInterest(balance)
+InterestStrategy --> Account: interestAmount
+Account -> Account: balance += interestAmount
+Account -> Notifier: notify("Interest applied: $X")
+Account --> AccountGroup: updated balance
+AccountGroup --> BankFacade: completed
+
+@enduml

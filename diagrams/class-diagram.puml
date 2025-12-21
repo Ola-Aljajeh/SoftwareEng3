@@ -1,0 +1,80 @@
+@startuml
+title BankingSystem — Class Diagram (pattern implementations)
+
+' Interfaces & core classes
+interface Account
+class BaseAccount
+class SavingsAccount
+class CheckingAccount
+class LoanAccount
+class InvestmentAccount
+class AccountGroup
+
+interface InterestStrategy
+class SimpleInterestStrategy
+class CompoundInterestStrategy
+class PromotionalInterestStrategy
+
+interface NotificationObserver
+class EmailNotifier
+class SMSNotifier
+class InAppNotifier
+
+interface AccountState
+class ActiveState
+class FrozenState
+class SuspendedState
+class ClosedState
+
+class Transaction
+class ApprovalHandler
+class AutoApprovalHandler
+class ManagerApprovalHandler
+class AdminApprovalHandler
+class ApprovalStatus
+
+class BankFacade
+
+' Inheritance / Realization
+Account <|.. BaseAccount
+BaseAccount <|-- SavingsAccount
+BaseAccount <|-- CheckingAccount
+BaseAccount <|-- LoanAccount
+BaseAccount <|-- InvestmentAccount
+
+InterestStrategy <|.. SimpleInterestStrategy
+InterestStrategy <|.. CompoundInterestStrategy
+InterestStrategy <|.. PromotionalInterestStrategy
+
+NotificationObserver <|.. EmailNotifier
+NotificationObserver <|.. SMSNotifier
+NotificationObserver <|.. InAppNotifier
+
+AccountState <|.. ActiveState
+AccountState <|.. FrozenState
+AccountState <|.. SuspendedState
+AccountState <|.. ClosedState
+
+ApprovalHandler <|.. AutoApprovalHandler
+ApprovalHandler <|.. ManagerApprovalHandler
+ApprovalHandler <|.. AdminApprovalHandler
+
+' Associations
+AccountGroup "1" *-- "*" Account : children
+Account "1" o-- "1" AccountState : state
+Account "1" o-- "*" NotificationObserver : observers
+Account "1" --> "1" InterestStrategy : uses
+
+ApprovalHandler "1" o-- "1" ApprovalHandler : next
+Transaction --> ApprovalStatus
+BankFacade --> Account : manages
+BankFacade --> ApprovalHandler : routes to
+BankFacade --> InterestStrategy : chooses
+
+' Notes
+note right of BankFacade
+  Facade coordinates account operations,
+  approval chain and interest application
+end note
+
+@enduml
