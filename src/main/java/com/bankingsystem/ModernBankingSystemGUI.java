@@ -108,6 +108,20 @@ public class ModernBankingSystemGUI extends JFrame {
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
 
+        // Search/filter box
+        JTextField searchField = new JTextField(20);
+        searchField.setMaximumSize(new Dimension(240, 28));
+        searchField.setToolTipText("Search accounts by name/type/balance");
+        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { filterAccounts(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { filterAccounts(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { filterAccounts(); }
+            private void filterAccounts() { String q = searchField.getText().trim().toLowerCase(); rebuildTree(q); }
+        });
+        toolbar.add(searchField);
+
+        toolbar.addSeparator(new Dimension(8, 0));
+
         JButton refreshBtn = createIconButton("Reload", "/icons/transfer.svg");
         refreshBtn.addActionListener(e -> { rebuildTree(); updateAccountCard(); appendNotification("Refresh", "Refreshed view"); });
         toolbar.add(refreshBtn);
@@ -115,20 +129,26 @@ public class ModernBankingSystemGUI extends JFrame {
         toolbar.addSeparator(new Dimension(8, 0));
 
         JButton depositBtn = createIconButton("Deposit", "/icons/deposit.svg");
+        depositBtn.setToolTipText("Deposit (Ctrl+D)");
         depositBtn.addActionListener(e -> doDeposit(100));
         toolbar.add(depositBtn);
 
         JButton withdrawBtn = createIconButton("Withdraw", "/icons/withdraw.svg");
+        withdrawBtn.setToolTipText("Withdraw (Ctrl+W)");
         withdrawBtn.addActionListener(e -> doWithdraw(50));
         toolbar.add(withdrawBtn);
 
         JButton interestBtn = createIconButton("Interest", "/icons/interest.svg");
+        interestBtn.setToolTipText("Apply Interest (Ctrl+I)");
         interestBtn.addActionListener(e -> doApplyInterest());
         toolbar.add(interestBtn);
 
         toolbar.add(Box.createHorizontalGlue());
 
-        JToggleButton themeToggle = new JToggleButton("Dark");
+        JToggleButton themeToggle = new JToggleButton();
+        themeToggle.setToolTipText("Toggle dark/light theme");
+        // use an SVG icon if available
+        themeToggle.setIcon(loadSvgIcon("/icons/theme-toggle.svg", 18));
         themeToggle.addActionListener(this::toggleTheme);
         toolbar.add(themeToggle);
 
@@ -136,6 +156,17 @@ public class ModernBankingSystemGUI extends JFrame {
         totalBalanceLabel.setFont(totalBalanceLabel.getFont().deriveFont(Font.BOLD, 14f));
         toolbar.add(Box.createHorizontalStrut(12));
         toolbar.add(totalBalanceLabel);
+
+        // Keyboard shortcuts
+        JRootPane root = getRootPane();
+        InputMap im = root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap am = root.getActionMap();
+        im.put(KeyStroke.getKeyStroke("control D"), "deposit");
+        am.put("deposit", new AbstractAction() { public void actionPerformed(ActionEvent e) { doDeposit(100); } });
+        im.put(KeyStroke.getKeyStroke("control W"), "withdraw");
+        am.put("withdraw", new AbstractAction() { public void actionPerformed(ActionEvent e) { doWithdraw(50); } });
+        im.put(KeyStroke.getKeyStroke("control I"), "interest");
+        am.put("interest", new AbstractAction() { public void actionPerformed(ActionEvent e) { doApplyInterest(); } });
 
         return toolbar;
     }
@@ -161,7 +192,21 @@ public class ModernBankingSystemGUI extends JFrame {
         right.setBorder(BorderFactory.createTitledBorder("Notifications"));
         notificationListModel = new DefaultListModel<>();
         notificationList = new JList<>(notificationListModel);
-        notificationList.setCellRenderer(new NotificationCellRenderer());
+        notificationList.setCellRenderer(new RichNotificationRenderer());
+        // Right-click to copy
+        notificationList.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getButton() == java.awt.event.MouseEvent.BUTTON3) {
+                    int idx = notificationList.locationToIndex(e.getPoint());
+                    if (idx >= 0) {
+                        String val = notificationListModel.get(idx);
+                        java.awt.datatransfer.StringSelection sel = new java.awt.datatransfer.StringSelection(val);
+                        java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(sel, null);
+                        appendNotification("Clipboard", "Copied notification to clipboard");
+                    }
+                }
+            }
+        });
         right.add(new JScrollPane(notificationList), BorderLayout.CENTER);
 
         split.setLeftComponent(left);
@@ -172,28 +217,57 @@ public class ModernBankingSystemGUI extends JFrame {
         return split;
     }
 
-    private void buildAccountTree() {
+    private void buildAccountTree() { buildAccountTree(""); }
+
+    private void buildAccountTree(String query) {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Bank");
         DefaultMutableTreeNode family = new DefaultMutableTreeNode("Johnson Family");
         root.add(family);
 
         nodeToAccountMap.clear();
 
+        String q = query == null ? "" : query.trim().toLowerCase();
         for (Account acc : accountMap.values()) {
+            String label = acc.getDescription().split("\n")[0];
+            String searchable = (label + " " + acc.getAccountType() + " " + String.format("%f", acc.getBalance())).toLowerCase();
+            if (!q.isEmpty() && !searchable.contains(q)) continue;
+
+            DefaultMutableTreeNode n;
             if (acc instanceof AccountGroup) {
-                DefaultMutableTreeNode g = new DefaultMutableTreeNode(acc.getDescription());
-                nodeToAccountMap.put(acc.getDescription(), acc);
-                family.add(g);
+                n = new DefaultMutableTreeNode(acc.getDescription());
             } else {
-                DefaultMutableTreeNode n = new DefaultMutableTreeNode(acc.getDescription().split("\n")[0]);
-                nodeToAccountMap.put(n.getUserObject().toString(), acc);
-                family.add(n);
+                n = new DefaultMutableTreeNode(label);
             }
+            nodeToAccountMap.put(n.getUserObject().toString(), acc);
+            family.add(n);
         }
 
         treeModel = new DefaultTreeModel(root);
         accountTree = new JTree(treeModel);
         accountTree.setRootVisible(false);
+        accountTree.setCellRenderer(new AccountTreeCellRenderer());
+        accountTree.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) accountTree.getLastSelectedPathComponent();
+                    if (node != null) {
+                        Account acc = nodeToAccountMap.get(node.getUserObject().toString());
+                        if (acc != null) {
+                            // Quick action: apply interest on double-click
+                            bankFacade.applyInterest(acc);
+                            appendNotification("Interest Applied", "Applied to " + acc.getAccountType());
+                            updateAccountCard();
+                        }
+                    }
+                }
+            }
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                if (e.isPopupTrigger()) showTreePopup(e);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent e) {
+                if (e.isPopupTrigger()) showTreePopup(e);
+            }
+        });
         accountTree.addTreeSelectionListener(e -> {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) accountTree.getLastSelectedPathComponent();
             if (node != null && node.getUserObject() != null) {
@@ -209,20 +283,43 @@ public class ModernBankingSystemGUI extends JFrame {
 
     private JPanel buildAccountCard() {
         JPanel card = new JPanel(new BorderLayout());
-        card.setBorder(new EmptyBorder(8, 8, 8, 8));
-        JPanel info = new JPanel(new GridLayout(0, 1, 4, 4));
+        card.setBorder(new EmptyBorder(12, 12, 12, 12));
+        card.setBackground(new Color(250, 250, 250));
+
+        JPanel info = new JPanel(new GridLayout(0, 1, 6, 6));
+        info.setOpaque(false);
 
         selectedAccountLabel = new JLabel("Select an account");
-        selectedAccountLabel.setFont(selectedAccountLabel.getFont().deriveFont(Font.BOLD, 16f));
+        selectedAccountLabel.setFont(selectedAccountLabel.getFont().deriveFont(Font.BOLD, 18f));
         info.add(selectedAccountLabel);
 
-        JLabel balanceLabel = new JLabel("Balance: $0.00");
+        JLabel balanceLabel = new JLabel("$0.00");
         balanceLabel.setName("balanceLabel");
-        balanceLabel.setFont(balanceLabel.getFont().deriveFont(14f));
+        balanceLabel.setFont(balanceLabel.getFont().deriveFont(Font.BOLD, 24f));
+        balanceLabel.setForeground(new Color(33, 150, 243));
         info.add(balanceLabel);
 
         JLabel typeLabel = new JLabel("Type: ---");
         info.add(typeLabel);
+
+        JPanel quick = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        quick.setOpaque(false);
+        JButton depositQuick = createIconButton("Deposit", "/icons/deposit.svg");
+        depositQuick.addActionListener(e -> doDeposit(100));
+        depositQuick.setToolTipText("Quick deposit $100");
+        quick.add(depositQuick);
+
+        JButton withdrawQuick = createIconButton("Withdraw", "/icons/withdraw.svg");
+        withdrawQuick.addActionListener(e -> doWithdraw(50));
+        withdrawQuick.setToolTipText("Quick withdraw $50");
+        quick.add(withdrawQuick);
+
+        JButton transferQuick = createIconButton("Transfer", "/icons/transfer.svg");
+        transferQuick.addActionListener(e -> doTransfer(200));
+        transferQuick.setToolTipText("Quick transfer $200 (use Set Source first)");
+        quick.add(transferQuick);
+
+        info.add(quick);
 
         card.add(info, BorderLayout.CENTER);
         return card;
@@ -262,19 +359,28 @@ public class ModernBankingSystemGUI extends JFrame {
     private JButton createIconButton(String tooltip, String resourcePath) {
         JButton b = new JButton();
         b.setToolTipText(tooltip);
-        try (InputStream is = getClass().getResourceAsStream(resourcePath)) {
-            if (is != null) {
-                Image img = ImageIO.read(is);
-                if (img != null) {
-                    b.setIcon(new ImageIcon(img.getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
-                } else {
-                    // ImageIO couldn't read resource (e.g., SVG). Fallback to text.
-                    b.setText(tooltip);
+        // Try FlatSVGIcon first (provided by flatlaf-extras)
+        try {
+            java.net.URL url = getClass().getResource(resourcePath);
+            if (url != null) {
+                try {
+                    Class<?> flatSvgClass = Class.forName("com.formdev.flatlaf.extras.FlatSVGIcon");
+                    javax.swing.Icon ic = (javax.swing.Icon) flatSvgClass.getConstructor(java.net.URL.class, float.class).newInstance(url, 20f);
+                    b.setIcon(ic);
+                } catch (Exception inner) {
+                    // fallback to ImageIO
+                    try (InputStream is = getClass().getResourceAsStream(resourcePath)) {
+                        if (is != null) {
+                            Image img = ImageIO.read(is);
+                            if (img != null) b.setIcon(new ImageIcon(img.getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
+                            else b.setText(tooltip);
+                        } else b.setText(tooltip);
+                    }
                 }
             } else {
                 b.setText(tooltip);
             }
-        } catch (IOException ex) {
+        } catch (Exception e) {
             b.setText(tooltip);
         }
         return b;
@@ -290,6 +396,62 @@ public class ModernBankingSystemGUI extends JFrame {
                 appendNotification("Error", e.getMessage());
             }
         }
+    }
+
+    private void rebuildTree(String query) {
+        buildAccountTree(query);
+        SwingUtilities.invokeLater(() -> { accountTree.updateUI(); updateTotalBalance(); });
+    }
+
+    private javax.swing.Icon loadSvgIcon(String resourcePath, float size) {
+        try {
+            java.net.URL url = getClass().getResource(resourcePath);
+            if (url != null) {
+                try {
+                    Class<?> flatSvgClass = Class.forName("com.formdev.flatlaf.extras.FlatSVGIcon");
+                    return (javax.swing.Icon) flatSvgClass.getConstructor(java.net.URL.class, float.class).newInstance(url, size);
+                } catch (Exception inner) {
+                    // fallback
+                    try (InputStream is = getClass().getResourceAsStream(resourcePath)) {
+                        if (is != null) {
+                            Image img = ImageIO.read(is);
+                            if (img != null) return new ImageIcon(img.getScaledInstance((int)size, (int)size, Image.SCALE_SMOOTH));
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // swallow
+        }
+        return null;
+    }
+
+    private void showTreePopup(java.awt.event.MouseEvent e) {
+        javax.swing.tree.TreePath path = accountTree.getPathForLocation(e.getX(), e.getY());
+        if (path == null) return;
+        accountTree.setSelectionPath(path);
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+        Account acc = nodeToAccountMap.get(node.getUserObject().toString());
+        if (acc == null) return;
+
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem deposit = new JMenuItem("Deposit $100");
+        deposit.addActionListener(ae -> { bankFacade.deposit(acc, 100); appendNotification("Deposit", "Deposited $100 to " + acc.getAccountType()); updateAccountCard(); });
+        menu.add(deposit);
+
+        JMenuItem withdraw = new JMenuItem("Withdraw $50");
+        withdraw.addActionListener(ae -> { bankFacade.withdraw(acc, 50); appendNotification("Withdraw", "Withdrew $50 from " + acc.getAccountType()); updateAccountCard(); });
+        menu.add(withdraw);
+
+        JMenuItem setSource = new JMenuItem("Set as Source");
+        setSource.addActionListener(ae -> { selectedSourceAccount = acc; appendNotification("Source Set", "Set source to " + acc.getAccountType()); updateAccountCard(); });
+        menu.add(setSource);
+
+        JMenuItem applyInterest = new JMenuItem("Apply Interest");
+        applyInterest.addActionListener(ae -> { bankFacade.applyInterest(acc); appendNotification("Interest", "Applied interest to " + acc.getAccountType()); updateAccountCard(); });
+        menu.add(applyInterest);
+
+        menu.show(accountTree, e.getX(), e.getY());
     }
 
     private void doWithdraw(double amount) {
@@ -366,18 +528,26 @@ public class ModernBankingSystemGUI extends JFrame {
         }
     }
 
-    private static class NotificationCellRenderer extends JLabel implements ListCellRenderer<String> {
-        NotificationCellRenderer() { setOpaque(true); setBorder(new EmptyBorder(6,6,6,6)); }
+    private static class RichNotificationRenderer extends JPanel implements ListCellRenderer<String> {
+        private JLabel title = new JLabel();
+        private JLabel time = new JLabel();
+        RichNotificationRenderer() {
+            setLayout(new BorderLayout(6,6));
+            setBorder(new EmptyBorder(6,6,6,6));
+            title.setFont(title.getFont().deriveFont(Font.BOLD, 12f));
+            time.setFont(time.getFont().deriveFont(Font.PLAIN, 11f));
+            add(title, BorderLayout.CENTER);
+            add(time, BorderLayout.EAST);
+        }
         @Override
         public Component getListCellRendererComponent(JList<? extends String> list, String value, int index, boolean isSelected, boolean cellHasFocus) {
-            setText(value);
-            if (isSelected) {
-                setBackground(list.getSelectionBackground());
-                setForeground(list.getSelectionForeground());
-            } else {
-                setBackground(list.getBackground());
-                setForeground(list.getForeground());
-            }
+            // Split by ' - ' to heuristically get short title/time
+            String display = value;
+            String[] parts = value.split(" - ", 2);
+            title.setText(parts.length>1?parts[1]:value);
+            time.setText(parts.length>0?parts[0].replaceAll("\[|\]","") : "");
+            if (isSelected) setBackground(list.getSelectionBackground()); else setBackground(list.getBackground());
+            setOpaque(true);
             return this;
         }
     }
