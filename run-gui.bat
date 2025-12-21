@@ -21,7 +21,10 @@ if not exist "target\classes\com\bankingsystem\BankingSystemGUI.class" (
 )
 
 echo [*] Launching GUI...
-java -cp target\classes com.bankingsystem.BankingSystemGUI
+set GUI_CLASS=com.bankingsystem.ModernBankingSystemGUI
+if "%1"=="--classic" set GUI_CLASS=com.bankingsystem.BankingSystemGUI
+if "%1"=="-c" set GUI_CLASS=com.bankingsystem.BankingSystemGUI
+java -cp target\classes %GUI_CLASS%
 
 if errorlevel 1 (
     echo [ERROR] Failed to launch GUI
