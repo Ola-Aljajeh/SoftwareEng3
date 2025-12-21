@@ -20,11 +20,19 @@ This document explains why specific design patterns were chosen, the trade-offs 
 
 ## How patterns address requirements
 - FR: Account ops & grouping → handled by **Composite** and `Account` interface (uniform API supports deposit/withdraw/applyInterest). Tests: `AccountTests`.
+  - Trace: `src/main/java/com/bankingsystem/account/Account.java`, `AccountGroup.java`, `BaseAccount.java`.
 - FR: Transfers & approvals → **Chain of Responsibility** (Approval handlers) implements progressive checks and clear escalation paths. Tests: `ApprovalChainTests`.
+  - Trace: `src/main/java/com/bankingsystem/transaction/ApprovalHandler.java`, `AutoApprovalHandler.java`, `AdminApprovalHandler.java`, `Transaction.java`.
 - FR: Interest policies → **Strategy** allows different algorithms to be chosen per account or scenario. Tests: `InterestStrategyTests`.
+  - Trace: `src/main/java/com/bankingsystem/interest/InterestStrategy.java`, `SimpleInterestStrategy.java`, `CompoundInterestStrategy.java`, `PromotionalInterestStrategy.java`.
 - FR: Notifications → **Observer** decouples message delivery from account logic; notifiers can be swapped or extended. Tests: `NotificationObserverTests`.
+  - Trace: `src/main/java/com/bankingsystem/notification/NotificationObserver.java`, `EmailNotifier.java`, `SMSNotifier.java`, `InAppNotifier.java`.
 - FR: State-dependent behavior → **State** enforces per-state rules and transitions, preventing invalid operations (e.g., withdraw from Closed). Tests: `StatePatternTests`.
+  - Trace: `src/main/java/com/bankingsystem/state/AccountState.java`, `ActiveState.java`, `FrozenState.java`, `SuspendedState.java`, `ClosedState.java`.
+- FR: Facade & Integration → **Facade** simplifies API used by demos and GUI. Tests: `FacadeIntegrationTests`.
+  - Trace: `src/main/java/com/bankingsystem/facade/BankFacade.java`, `BankingSystemDemo.java`, `BankingSystemGUI.java`.
 - NFRs: Maintainability & extensibility are addressed by small interfaces and single-responsibility classes (patterns encourage decomposition). Testability is improved because patterns localize behavior (e.g., testing strategies or handlers independently). CI automation ensures compatibility with Java 21 and regressions are caught early.
+  - Trace: `pom.xml`, `.github/workflows/ci.yml`, `run-tests.bat`, `docs/REQUIREMENTS.md`.
 
 ## Conclusion
 These patterns were selected for clarity, pedagogical value, and their close fit to domain concepts (accounts, approvals, interest, notifications, state). The design favors explicit, well-tested components over maximal flexibility—an intentional trade-off to keep the project maintainable, extensible, and easy to reason about in an educational/demo context.
