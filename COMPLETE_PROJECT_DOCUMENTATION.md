@@ -4,7 +4,7 @@
 This repository contains an educational banking system demonstrating six classical design patterns (Composite, Chain of Responsibility, Strategy, Observer, Facade, State). The project is implemented in Java and intended to be easy to run and test.
 
 ## Quick facts
-- Language: Java (target: **Java 21 LTS**) 🔒
+- Language: Java (target: **Java 21 LTS**)
 - Build: Maven
 - Tests: JUnit 5 + Mockito
 - CI: GitHub Actions (JDK 21)
@@ -69,6 +69,8 @@ A GitHub Actions workflow was added to run the Maven build and tests under Java 
 
 ## 6) Where the original docs went
 All previous Markdown documentation has been moved to `docs/archive/` for safekeeping. The repository now uses this single canonical document.
+
+**Archived scripts:** Migration and helper Python scripts used during maintenance (e.g., `remove-logging.py`, `fix-method-calls.py`, `compile-all.py`, `build.py`) have been archived under `docs/archive/scripts/`.
 
 ---
 
