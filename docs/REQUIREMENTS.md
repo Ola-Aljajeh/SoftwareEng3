@@ -57,7 +57,7 @@ This document lists the Functional Requirements (FR) and Non‑Functional Requir
 
 ## How to validate / run tests 🔁
 
-- Run full test suite locally: `run-tests.bat` (or `mvn -DskipTests=false test`).
+- Run test suite locally: `run-tests.bat` (or `mvn -DskipTests=false test`). To run tests + coverage + Checkstyle use `run-tests.bat --full` (or `run-tests.bat -f`), which runs `mvn -DskipTests=false test jacoco:report jacoco:check checkstyle:check`.
 - Run coverage and validation locally (matches CI): `mvn -DskipTests=false test jacoco:report jacoco:check`
 - Run Checkstyle locally: `mvn checkstyle:check` (Checkstyle is configured to warn by default; CI also runs it and uploads the report).
 - CI: check workflow `.github/workflows/ci.yml` and Actions runs. Recent successful run: see Actions page for the `CI` workflow.
