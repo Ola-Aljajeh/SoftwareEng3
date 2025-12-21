@@ -84,6 +84,10 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <excludes>
+                        <exclude>**/BankingSystemGUI*</exclude>
+                        <exclude>**/BankingSystemDemo*</exclude>
+                    </excludes>
                     <rules>
                         <rule>
                             <element>BUNDLE</element>
@@ -97,7 +101,6 @@
                         </rule>
                     </rules>
                 </configuration>
-                </executions>
             </plugin>
 
             <plugin>
